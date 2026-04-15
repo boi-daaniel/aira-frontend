@@ -8,8 +8,10 @@ import { JobDetailPage } from "./pages/JobDetailPage";
 import { JobsPage } from "./pages/JobsPage";
 import { LoginPage } from "./pages/LoginPage";
 import { NotFoundPage } from "./pages/NotFoundPage";
+import { AdminApplicantDetailPage } from "./pages/admin/AdminApplicantDetailPage";
 import { AdminApplicantsPage } from "./pages/admin/AdminApplicantsPage";
 import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
+import { AdminJobDetailPage } from "./pages/admin/AdminJobDetailPage";
 import { AdminJobsPage } from "./pages/admin/AdminJobsPage";
 
 export function App() {
@@ -27,7 +29,9 @@ export function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboardPage />} />
           <Route path="applicants" element={<AdminApplicantsPage />} />
+          <Route path="applicants/:applicantId" element={<AdminApplicantDetailPage />} />
           <Route path="jobs" element={<AdminJobsPage />} />
+          <Route path="jobs/:jobId" element={<AdminJobDetailPage />} />
         </Route>
       </Route>
       <Route path="*" element={<NotFoundPage />} />

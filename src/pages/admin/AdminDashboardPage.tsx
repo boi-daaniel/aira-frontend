@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useAuth } from "../../features/auth/AuthProvider";
 
 export function AdminDashboardPage() {
@@ -16,8 +17,8 @@ export function AdminDashboardPage() {
           <p className="eyebrow">Overview</p>
           <h1>Welcome back, {user.name}.</h1>
           <p>
-            This protected shell is session-backed by the backend. Gmail connectivity and applicant
-            operations remain server-owned.
+            The core admin workflow is now wired for applicants, status changes, job management,
+            and history tracking. Gmail ingestion is intentionally still out of scope.
           </p>
         </div>
 
@@ -37,17 +38,19 @@ export function AdminDashboardPage() {
 
       <section className="dashboard-grid">
         <article className="panel copy-stack">
-          <h3>Auth contract</h3>
-          <p>Login is Google-only.</p>
-          <p>The backend owns the session cookie and token storage.</p>
-          <p>The same Google identity is reused for Gmail access.</p>
+          <h3>Applicants</h3>
+          <p>Search and filter by status, then open a detail view for audit history and resumes.</p>
+          <Link to="/admin/applicants" className="button">
+            Open applicants
+          </Link>
         </article>
 
         <article className="panel copy-stack">
-          <h3>Next admin slices</h3>
-          <p>Applicants list and detail views.</p>
-          <p>Job management and publication controls.</p>
-          <p>Manual scan triggers and ingestion visibility.</p>
+          <h3>Jobs</h3>
+          <p>Review job positions, filter by status, and update basic role configuration.</p>
+          <Link to="/admin/jobs" className="button button--secondary">
+            Open jobs
+          </Link>
         </article>
       </section>
     </div>
