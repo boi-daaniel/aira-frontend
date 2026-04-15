@@ -6,7 +6,7 @@ Browser-facing application for the AIRA recruiting platform.
 
 - Public careers pages and job listings
 - Public application flow
-- Admin-facing UI shells and routing
+- Protected admin layout and route gating
 - Google sign-in entrypoints that redirect to the backend
 - API client layer for calling protected backend endpoints
 
@@ -45,13 +45,13 @@ Required variables:
 
 ```text
 src/
-  components/      shared UI
+  components/      shared layouts and UI building blocks
   config/          browser-safe env access
-  data/            temporary local placeholder data
   features/
-    auth/          Google sign-in entrypoints and auth types
-  lib/             generic browser utilities
+    auth/          session state, route protection, Google entrypoints
+    jobs/          typed job API access and hooks
+  lib/             generic browser utilities and typed API layer
   pages/
-    admin/         admin page scaffolding
+    admin/         protected admin pages
   styles/          global styling
 ```

@@ -1,81 +1,109 @@
 import { Link } from "react-router-dom";
 import { JobCard } from "../components/jobs/JobCard";
-import { jobs, pipelineStages } from "../data/jobs";
-
-const featuredJobs = jobs.filter((job) => job.featured);
+import { EmptyState, ErrorState, LoadingState } from "../components/ui/States";
+import { useJobs } from "../features/jobs/hooks";
 
 export function HomePage() {
+  const { data: jobs, error, isLoading } = useJobs("published");
+  const featuredJobs = jobs.slice(0, 3);
+
   return (
     <div className="page-stack">
       <section className="hero-panel">
         <div className="hero-panel__content">
-          <p className="eyebrow">Hiring systems for deliberate teams</p>
-          <h2>Recruit with more signal and less manual chaos.</h2>
+          <p className="eyebrow">Public careers surface</p>
+          <h2>Structured hiring for teams that move deliberately.</h2>
           <p className="lead">
-            AIRA combines public hiring surfaces with an internal workflow layer for applications,
-            inbox-driven intake, and structured decision-making.
+            AIRA separates the public recruiting experience from protected internal operations. The
+            browser app handles careers pages and admin entry, while all identity, Gmail access,
+            and workflow data stay in the backend.
           </p>
           <div className="action-row">
             <Link to="/jobs" className="button">
               Explore open roles
             </Link>
-            <Link to="/login" className="button button--secondary">
-              Log in
+            <Link to="/login?returnTo=/admin" className="button button--secondary">
+              Admin sign in
             </Link>
           </div>
         </div>
 
         <div className="hero-panel__aside">
           <div className="metric-card">
-            <span className="metric-card__label">Pipeline visibility</span>
-            <strong className="metric-card__value">75</strong>
-            <p>active applicants across live roles</p>
+            <span className="metric-card__label">Backend-owned auth</span>
+            <strong className="metric-card__value">Google</strong>
+            <p>Same identity for admin access and Gmail scanning.</p>
           </div>
+
           <div className="stage-list">
-            {pipelineStages.map((stage) => (
-              <div key={stage.label} className="stage-list__item">
-                <span>{stage.label}</span>
-                <strong>{stage.count}</strong>
-              </div>
-            ))}
+            <div className="stage-list__item">
+              <span>Public pages</span>
+              <strong>Open</strong>
+            </div>
+            <div className="stage-list__item">
+              <span>Admin routes</span>
+              <strong>Protected</strong>
+            </div>
+            <div className="stage-list__item">
+              <span>API contract</span>
+              <strong>Typed</strong>
+            </div>
           </div>
         </div>
       </section>
 
       <section className="content-grid">
-        <div className="panel">
-          <p className="eyebrow">Why this split matters</p>
-          <h3>Frontend stays clean.</h3>
+        <article className="panel">
+          <p className="eyebrow">Public and admin split</p>
+          <h3>Clear frontend boundaries.</h3>
           <p>
-            This repository only handles public UI, browser state, and requests to the backend API.
-            Secrets, Gmail access, admin sessions, and protected logic remain server-side.
+            Careers pages and applications remain public. Admin pages are routed separately and only
+            open after the backend confirms the session cookie.
           </p>
-        </div>
-        <div className="panel">
-          <p className="eyebrow">Planned integrations</p>
-          <h3>Built to connect.</h3>
+        </article>
+
+        <article className="panel">
+          <p className="eyebrow">No sensitive browser logic</p>
+          <h3>Backend remains the authority.</h3>
           <p>
-            The UI is already shaped around future backend flows for Google login, Supabase-backed
-            data, resume uploads, applicant tracking, and inbox scanning.
+            The frontend only triggers Google sign-in and reads session state. OAuth exchanges,
+            refresh tokens, Gmail access, and protected data remain server-side.
           </p>
-        </div>
+        </article>
       </section>
 
       <section className="section-header">
         <div>
-          <p className="eyebrow">Featured openings</p>
-          <h3>Current roles</h3>
+          <p className="eyebrow">Live openings</p>
+          <h3>Featured positions</h3>
         </div>
         <Link to="/jobs" className="text-link">
-          See all openings
+          Browse all roles
         </Link>
       </section>
 
-      <section className="jobs-grid">
-        {featuredJobs.map((job) => (
-          <JobCard key={job.id} job={job} />
-        ))}
-      </section>
+      {isLoading ? (
+        <LoadingState
+          title="Loading current roles"
+          description="Fetching published jobs from the backend."
+        />
+      ) : error ? (
+        <ErrorState
+          title="Roles are unavailable right now"
+          description="The careers API could not be loaded."
+        />
+      ) : featuredJobs.length === 0 ? (
+        <EmptyState
+          title="No published roles yet"
+          description="Open jobs will appear here once positions are published."
+        />
+      ) : (
+        <section className="jobs-grid">
+          {featuredJobs.map((job) => (
+            <JobCard key={job.id} job={job} />
+          ))}
+        </section>
+      )}
     </div>
   );
 }

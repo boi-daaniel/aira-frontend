@@ -1,39 +1,46 @@
 import { FormEvent, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getJobBySlug } from "../data/jobs";
+import { ErrorState, LoadingState } from "../components/ui/States";
+import { useJob } from "../features/jobs/hooks";
 
 type SubmissionState = "idle" | "submitted";
 
 export function ApplyPage() {
-  const { jobSlug = "" } = useParams();
-  const job = getJobBySlug(jobSlug);
+  const { jobId } = useParams();
+  const { data: job, error, isLoading } = useJob(jobId);
   const [submissionState, setSubmissionState] = useState<SubmissionState>("idle");
-
-  if (!job) {
-    return (
-      <section className="panel page-stack">
-        <p className="eyebrow">Application unavailable</p>
-        <h2>This role cannot be applied to right now.</h2>
-        <Link to="/jobs" className="button">
-          Back to jobs
-        </Link>
-      </section>
-    );
-  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setSubmissionState("submitted");
   }
 
+  if (isLoading) {
+    return (
+      <LoadingState
+        title="Preparing application"
+        description="Loading job details before showing the application form."
+      />
+    );
+  }
+
+  if (error || !job) {
+    return (
+      <ErrorState
+        title="Application unavailable"
+        description="This role could not be loaded, so the public application form is unavailable."
+      />
+    );
+  }
+
   return (
     <div className="page-stack">
       <section className="section-intro">
-        <p className="eyebrow">Public application form</p>
+        <p className="eyebrow">Public application</p>
         <h2>Apply for {job.title}</h2>
         <p className="lead">
-          This form is currently local-only. In the next phase it will submit to the backend for
-          storage, upload handling, and applicant record creation.
+          This page is public, but final submission, file uploads, and applicant creation will be
+          handled by backend endpoints in the next step.
         </p>
       </section>
 
@@ -60,30 +67,32 @@ export function ApplyPage() {
             <textarea
               name="motivation"
               rows={6}
-              placeholder="Tell us how you think about hiring systems, operations, or product craft."
+              placeholder="Share your background and why this role is a fit."
               required
             />
           </label>
 
           <button type="submit" className="button">
-            Submit application
+            Save draft locally
           </button>
         </form>
 
-        <aside className="panel">
+        <aside className="panel copy-stack">
           <h3>What happens next</h3>
-          <div className="copy-stack">
-            <p>Applications will later be persisted through the backend API and written to Supabase.</p>
-            <p>Resume uploads will be exchanged for signed upload targets so files never require secrets in the browser.</p>
-            <p>Recruiters will review candidates in the admin dashboard after Google-authenticated sign-in.</p>
-          </div>
+          <p>Public applications will submit to the backend API and create `public_applications` records.</p>
+          <p>Resume uploads will use signed storage flows so no browser secret handling is required.</p>
+          <p>Admins will review candidates inside the protected dashboard after Google sign-in.</p>
 
           {submissionState === "submitted" ? (
             <div className="notice">
-              <strong>Form captured locally.</strong>
-              <p>The backend submission flow has not been connected yet.</p>
+              <strong>Local-only placeholder saved.</strong>
+              <p>The submission endpoint is not connected yet.</p>
             </div>
           ) : null}
+
+          <Link to={`/jobs/${job.id}`} className="text-link">
+            Back to role details
+          </Link>
         </aside>
       </section>
     </div>

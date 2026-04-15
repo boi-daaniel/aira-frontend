@@ -1,15 +1,39 @@
 import { Link, useParams } from "react-router-dom";
-import { getJobBySlug } from "../data/jobs";
+import { ErrorState, LoadingState } from "../components/ui/States";
+import { useJob } from "../features/jobs/hooks";
+
+function formatEmploymentType(value: string) {
+  return value.replace("_", "-");
+}
 
 export function JobDetailPage() {
-  const { jobSlug = "" } = useParams();
-  const job = getJobBySlug(jobSlug);
+  const { jobId } = useParams();
+  const { data: job, error, isLoading } = useJob(jobId);
+
+  if (isLoading) {
+    return (
+      <LoadingState
+        title="Loading job details"
+        description="Fetching the role from the backend."
+      />
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        title="That role could not be loaded"
+        description="The job may no longer be available or the API is currently unavailable."
+      />
+    );
+  }
 
   if (!job) {
     return (
-      <section className="panel page-stack">
-        <p className="eyebrow">Role not found</p>
-        <h2>That job listing is unavailable.</h2>
+      <section className="status-panel">
+        <p className="eyebrow">Unavailable</p>
+        <h2>That role does not exist.</h2>
+        <p>Return to the jobs directory to review active listings.</p>
         <Link to="/jobs" className="button">
           Back to jobs
         </Link>
@@ -25,10 +49,12 @@ export function JobDetailPage() {
           <h2>{job.title}</h2>
           <p className="lead">{job.summary}</p>
         </div>
+
         <div className="job-hero__meta">
-          <span>{job.location}</span>
-          <span>{job.type}</span>
-          <Link to={`/apply/${job.slug}`} className="button">
+          <span>{job.locationText}</span>
+          <span>{formatEmploymentType(job.employmentType)}</span>
+          <span>{job.workplaceType}</span>
+          <Link to={`/apply/${job.id}`} className="button">
             Start application
           </Link>
         </div>
@@ -38,20 +64,22 @@ export function JobDetailPage() {
         <article className="panel">
           <h3>Role overview</h3>
           <div className="copy-stack">
-            {job.description.map((paragraph) => (
-              <p key={paragraph}>{paragraph}</p>
-            ))}
+            {job.descriptionMarkdown ? (
+              job.descriptionMarkdown.split("\n").filter(Boolean).map((paragraph) => (
+                <p key={paragraph}>{paragraph}</p>
+              ))
+            ) : (
+              <p>Detailed responsibilities have not been published yet.</p>
+            )}
           </div>
         </article>
 
         <aside className="panel">
-          <h3>Core strengths</h3>
-          <div className="pill-row">
-            {job.skills.map((skill) => (
-              <span key={skill} className="pill">
-                {skill}
-              </span>
-            ))}
+          <h3>Role metadata</h3>
+          <div className="copy-stack">
+            <p>Status: {job.status}</p>
+            <p>Applications: {job.applyEnabled ? "Open" : "Closed"}</p>
+            <p>Published: {job.publishedAt ? new Date(job.publishedAt).toLocaleDateString() : "Not published"}</p>
           </div>
         </aside>
       </section>

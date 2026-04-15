@@ -6,6 +6,35 @@ type RequestOptions = {
   signal?: AbortSignal;
 };
 
+type ApiSuccessResponse<TData> = {
+  success: true;
+  data: TData;
+  meta?: Record<string, unknown>;
+};
+
+type ApiErrorResponse = {
+  success: false;
+  error: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
+};
+
+type ApiEnvelope<TData> = ApiSuccessResponse<TData> | ApiErrorResponse;
+
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code?: string,
+    public readonly details?: unknown,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
 export async function apiRequest<T>(
   path: string,
   options: RequestOptions = {},
@@ -20,9 +49,35 @@ export async function apiRequest<T>(
     signal: options.signal,
   });
 
+  const contentType = response.headers.get("content-type") ?? "";
+  const isJson = contentType.includes("application/json");
+  const payload = isJson ? ((await response.json()) as ApiEnvelope<T>) : null;
+
   if (!response.ok) {
-    throw new Error(`API request failed with status ${response.status}`);
+    if (payload && !payload.success) {
+      throw new ApiError(
+        payload.error.message,
+        response.status,
+        payload.error.code,
+        payload.error.details,
+      );
+    }
+
+    throw new ApiError(`API request failed with status ${response.status}.`, response.status);
   }
 
-  return (await response.json()) as T;
+  if (!payload) {
+    throw new ApiError("API response did not contain JSON.", response.status);
+  }
+
+  if (!payload.success) {
+    throw new ApiError(
+      payload.error.message,
+      response.status,
+      payload.error.code,
+      payload.error.details,
+    );
+  }
+
+  return payload.data;
 }
