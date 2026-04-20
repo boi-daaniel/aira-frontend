@@ -47,7 +47,7 @@ export function AdminDashboardPage() {
           <h1>Welcome back, {user.name}.</h1>
           <p>
             The core admin workflow is now wired for applicants, status changes, job management,
-            and history tracking. Gmail ingestion is intentionally still out of scope.
+            history tracking, and manual Gmail scanning for the signed-in admin account.
           </p>
         </div>
 
