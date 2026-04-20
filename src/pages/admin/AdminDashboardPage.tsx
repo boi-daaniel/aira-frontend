@@ -1,14 +1,43 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../features/auth/AuthProvider";
+import { runManualGmailScan } from "../../features/gmail/api";
 
 export function AdminDashboardPage() {
   const { authState } = useAuth();
+  const [scanState, setScanState] = useState<{
+    status: "idle" | "running" | "success" | "error";
+    message: string | null;
+  }>({
+    status: "idle",
+    message: null,
+  });
 
   if (authState.status !== "authenticated") {
     return null;
   }
 
   const { user, gmailConnection } = authState.session;
+
+  async function handleManualScan() {
+    setScanState({
+      status: "running",
+      message: null,
+    });
+
+    try {
+      const result = await runManualGmailScan();
+      setScanState({
+        status: "success",
+        message: `Manual scan ${result.scanStatus}. Scanned ${result.messagesScanned} messages and matched ${result.messagesMatched}.`,
+      });
+    } catch (error) {
+      setScanState({
+        status: "error",
+        message: error instanceof Error ? error.message : "Manual Gmail scan failed.",
+      });
+    }
+  }
 
   return (
     <div className="page-stack">
@@ -52,6 +81,30 @@ export function AdminDashboardPage() {
             Open jobs
           </Link>
         </article>
+      </section>
+
+      <section className="panel copy-stack">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">Mailbox</p>
+            <h3>Gmail scan</h3>
+          </div>
+          <button
+            type="button"
+            className="button"
+            onClick={handleManualScan}
+            disabled={!gmailConnection?.connected || scanState.status === "running"}
+          >
+            {scanState.status === "running" ? "Scanning..." : "Run manual scan"}
+          </button>
+        </div>
+        <p>
+          Connected mailbox: {gmailConnection?.googleEmail ?? "Not connected"}
+        </p>
+        <p>
+          Last successful scan: {gmailConnection?.lastSuccessfulScanAt ? new Date(gmailConnection.lastSuccessfulScanAt).toLocaleString() : "Never"}
+        </p>
+        {scanState.message ? <p className="helper-copy">{scanState.message}</p> : null}
       </section>
     </div>
   );
